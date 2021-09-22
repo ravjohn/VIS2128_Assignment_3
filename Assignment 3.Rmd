@@ -144,8 +144,10 @@ theme_map() +
 This map shows the Boston neighborhoods that contain a designated Main Street District. These  are commercial district organizations that promote and attract commerce to the area. The map clearly shows a lack of districts in the downtown area, but does not indicate the amount to which each neighborhood contains a district. This map would be a good starting point to examine the effectiveness of or need for Main Street Districts in the highlighted neighborhoods, which are geographically larger and likely less dense.
 
 
+
+
 ### 3. Number of Community Centers in Each Neighborhood
-```{r number of community centers in each Nhood}
+```{r number of community centers in each Nhood, message = FALSE}
 
 nhoods <- nhoods %>%
   mutate(num_centers = lengths(st_covers(nhoods,centers)))
@@ -182,10 +184,14 @@ theme_map() +
         legend.background = element_rect(fill = alpha("white", 0.5), 
                                          color = "gray"))
 ```
+
+
 This map shows the average number of community centres in each neighborhood in Boston.
 
+
+
 ### 4. Average Distance between EV Stations and Main Street Districts 
-```{r}
+```{r, message = FALSE, results = 'hide'}
 EV <- EV %>%
   mutate(main_dist = st_nn(EV, main, 
                            returnDist = TRUE)$dist) %>%
@@ -225,7 +231,11 @@ bottom_side <- st_bbox(main)$ymin
                                          color = "gray"))
 
 ```
+
+
 This map shows an average distance between an Electric Vehicle station and Main Street District in Boston.
+
+
 
 ### 5.
 
