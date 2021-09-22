@@ -142,3 +142,92 @@ theme_map() +
 ```
 
 This map shows the Boston neighborhoods that contain a designated Main Street District. These  are commercial district organizations that promote and attract commerce to the area. The map clearly shows a lack of districts in the downtown area, but does not indicate the amount to which each neighborhood contains a district. This map would be a good starting point to examine the effectiveness of or need for Main Street Districts in the highlighted neighborhoods, which are geographically larger and likely less dense.
+
+
+### 3. Number of Community Centers in Each Neighborhood
+```{r number of community centers in each Nhood}
+
+nhoods <- nhoods %>%
+  mutate(num_centers = lengths(st_covers(nhoods,centers)))
+
+n_centers <- sum(nhoods$num_centers)
+max_n_centers <- max(nhoods$num_centers)
+pct_n_centers <- max_n_centers/n_centers
+name_max_centers <- nhoods[ which(nhoods$num_centers=='5'),1]
+ave_n_centers <- ave(nhoods$num_centers)
+
+
+left_side  <- st_bbox(nhoods)$xmin
+top_side <- st_bbox(main)$ymax
+
+ggplot(nhoods) +
+  geom_sf(color = NA, 
+          aes(fill = num_centers)) +
+  scale_fill_viridis_c(name = "Boston neighborhoods\nby number of community centers",
+                       breaks = breaks <- seq(0, 5, by = 1),
+                       labels = paste(prettyNum(breaks, big.mark = ","),
+                                      "community centers")) +
+  annotation_scale(location = "br") +
+  annotation_north_arrow(location = "tr",
+                         style = north_arrow_minimal()) +
+   annotate(geom = "text", x = left_side + 500, 
+           y = top_side + 1600, 
+             label = paste("The average number of community centers in each neighborhood\nis ", 
+                         prettyNum(ave_n_centers, digits = 3),
+                         ".",
+                         sep = ""),
+           hjust = 0, vjust = 0, size = 3) +
+theme_map() +
+  theme(legend.position = "right",
+        legend.background = element_rect(fill = alpha("white", 0.5), 
+                                         color = "gray"))
+```
+This map shows the average number of community centres in each neighborhood in Boston.
+
+### 4. Average Distance between EV Stations and Main Street Districts 
+```{r}
+EV <- EV %>%
+  mutate(main_dist = st_nn(EV, main, 
+                           returnDist = TRUE)$dist) %>%
+  mutate(main_dist = as.numeric(main_dist))
+
+avg_main_dist <- mean(EV$main_dist)
+
+
+right_side <- st_bbox(main)$xmax
+left_side  <- st_bbox(main)$xmin
+top_side <- st_bbox(main)$ymax
+bottom_side <- st_bbox(main)$ymin
+
+
+                       
+  ggplot(nhoods) +
+  geom_sf(fill = "gray", color = NA) +
+  geom_sf(data = EV, size = 1,
+          aes(color = main_dist)) +
+  coord_sf(xlim = c(left_side, right_side), 
+           ylim = c(bottom_side, top_side), expand = FALSE) +
+  scale_color_viridis_c(name = 
+                          "EV distance\n to a Main Street District") +
+  annotation_scale(location = "br") +
+  annotation_north_arrow(location = "tr",
+                         style = north_arrow_minimal()) +
+  annotate(geom = "text", x = left_side + 300, 
+           y = top_side - 1100, 
+           label = paste("On average, a Boston EV\nis ", 
+                         prettyNum(avg_main_dist, digits = 3),
+                         " meters from Main Street District.",
+                         sep = ""),
+           hjust = 0, vjust = 0, size = 3) +
+  theme_map() +
+  theme(panel.background = element_rect(fill = "cornsilk1"),
+        legend.background = element_rect(fill = alpha("white", 0.5), 
+                                         color = "gray"))
+
+```
+This map shows an average distance between an Electric Vehicle station and Main Street District in Boston.
+
+### 5.
+
+
+### 6.
