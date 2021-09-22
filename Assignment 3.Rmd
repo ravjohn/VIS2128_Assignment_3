@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ***
-### Load packages.
+Load packages.
 ```{r Load Packages, message=FALSE, warning=FALSE}
 library(sf)
 library(tidyverse)
@@ -26,7 +26,7 @@ library(units)
 library(nngeo)
 ```
 
-### Load data.
+Load data.
 ```{r Load Data}
 EV <- st_read("https://bostonopendata-boston.opendata.arcgis.com/datasets/465e00f9632145a1ad645a27d27069b4_2.kml?outSR=%7B%22latestWkid%22%3A2249%2C%22wkid%22%3A102686%7D", 
                   quiet = TRUE) 
@@ -42,7 +42,7 @@ nhoods <- st_read("https://bostonopendata-boston.opendata.arcgis.com/datasets/35
 ```
 
 
-### Transform data to be consistent with Massachusetts State Plane.
+Transform data to be consistent with Massachusetts State Plane.
 ```{r Transform Data}
 MA_state_plane <- "+proj=lcc +lat_1=41.71666666666667 +lat_2=42.68333333333333 +lat_0=41 +lon_0=-71.5 +x_0=200000 +y_0=750000 +ellps=GRS80 +units=m +no_defs"
 
@@ -237,7 +237,86 @@ This map shows an average distance between an Electric Vehicle station and Main 
 
 
 
-### 5.
+### 5. Number and Proportion of EV Charging Stations within 500m of a Community Center
+```{r Number and Proportion of EV Charging Stations within 500m of a Community Center, message = FALSE}
+
+centers_buffer <- st_buffer(centers, dist = 500) %>%
+  st_union()
+
+EV_centers <- EV[centers_buffer,]
+
+EV <- EV %>%
+  st_join(EV_centers) %>%
+  mutate(by_centers = !is.na(Name.y))
+
+n_EV_centers <- sum(EV$by_centers)
 
 
-### 6.
+n_EV <- length(EV$by_centers)
+
+pct_EV_centers <- n_EV_centers / n_EV
+
+
+
+ggplot() +
+   geom_sf(data = nhoods, fill = "powderblue", color = NA) + 
+
+  geom_sf(data = EV, size = 0.025,
+          aes(color = by_centers)) +
+  scale_color_manual(values = c("firebrick", "blue4"),
+          name = "EV Charging Stations\nby distance to a community center", 
+          labels = c("No charging station within 500 m",
+                     "Charging station within 500 m")) +
+  annotation_scale(location = "br") +
+  annotation_north_arrow(location = "tr",
+                         style = north_arrow_minimal()) +
+  annotate(geom = "text", x = left_side, 
+           y = top_side, 
+           label = paste("Of the ", 
+                         prettyNum(n_EV, big.mark = ","),
+                         " EV charging stations in Boston,\n", 
+                         prettyNum(n_EV_centers, big.mark = ","),
+                         " (", 
+                         prettyNum(100*pct_EV_centers, digits = 0),
+                         "%) are within 500 meters of a community center.",
+                         sep = ""),
+           hjust = 0, vjust = 0, size = 3) +
+  theme_map() +
+  theme(panel.background = element_rect(fill = "aliceblue"),
+        legend.background = element_rect(fill = alpha("plum2", 0.5), 
+                                         color = "blueviolet"))
+```
+
+
+This map shows an average distance between an Electric Vehicle station and Main Street District in Boston.
+
+
+
+### 6. Boston Neighborhoods by Number of EV Charging Stations
+```{r}
+left_side  <- st_bbox(main)$xmin
+top_side <- st_bbox(main)$ymax
+
+nhoods <- nhoods %>%
+  mutate(num_EV = lengths(st_covers(nhoods, EV)))
+
+ggplot(nhoods) +
+  geom_sf(color = NA, 
+          aes(fill = num_EV)) +
+  scale_fill_viridis_c(name = "Neighborhoods by number\nof charging stations",
+                       breaks = breaks <- seq(0, 20, by = 2),
+                       labels = paste(prettyNum(breaks, big.mark = ","),
+                                      "charging stations")) +
+  annotation_scale(location = "br") +
+  annotation_north_arrow(location = "tr",
+                         style = north_arrow_minimal()) +
+
+theme_map() +
+  theme(legend.position = "right", legend.background = element_rect(fill = alpha("plum2", 0.1), 
+                                         color = "blueviolet"))
+```
+
+This map shows the prevalence of EV charging stations broken down by neighborhood. As seen by the yellow coloring, one of Boston’s neighborhoods has a proportionately high concentration of EV charging stations while many portions of the city have very few charging stations, if any at all. Several neighborhoods are in the middle range, each containing somewhere in the range of 4-10 EV charging stations.
+
+### Team distribution of points
+When working on this assignment, we worked collectively as a team by going through tutorials, discussing data sets and troubleshooting problems. Each member of the team made two individual maps, and therefore contributed equally to the finished product. We therefore recommend distributing 10 points equally to each member of our team.
